@@ -11,7 +11,8 @@ import org.apache.lucene.util.*
 
  
 class IndexingService {
-    void run() {
+    List run() {
+        List result = []
         // This script indexes the text from shakespeare.txt and indexes each line. 
         // It then search this index for a value passed in as an argument.
         
@@ -39,11 +40,15 @@ class IndexingService {
         def indexSearcher = new IndexSearcher(indexReader)
         def hits =  indexSearcher.search(query, 10000).scoreDocs
         
-        hits.collect{indexSearcher.doc(it.doc)}.each{ println "${it.lineNumber} ${it.line}"}
+        hits.collect{indexSearcher.doc(it.doc)}.each{
+            result.add("${it.lineNumber} ${it.line}")
+        }
         println "${hits.length} matches for ${searchTerm - 'line:'} found."
         
         // Tidy up resources
         indexReader.close()
         indexWriter.close()
+        
+        result
     }
 }

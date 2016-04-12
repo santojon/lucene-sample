@@ -1,13 +1,11 @@
-package com.sample.lucene.web
+package com.sample.lucene.controller
 
-import com.sample.lucene.service.*
+import com.sample.lucene.service.LanguageService
 
-class LanguageHelper {
+class LanguageController {
     def service = new LanguageService()
-    def i = new IndexingService()
     
     String getGroovyValue() {
-        i.run()
         service.findGroovy()?.name ?: 'Groovy language not found'
     }
 }

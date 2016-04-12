@@ -1,6 +1,6 @@
-import com.sample.lucene.web.LanguageHelper
+import com.sample.lucene.controller.LanguageController
 
-def helper = new LanguageHelper()
+def controller = new LanguageController()
 
 html.html {
     head {
@@ -8,6 +8,6 @@ html.html {
     }
     body {
         h1 "Simple page"
-        p "My favorite language is '$helper.groovyValue'."
+        p "My favorite language is '$controller.groovyValue'."
     }
 }

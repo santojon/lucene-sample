@@ -75,11 +75,17 @@ project(':services') {
     }
 }
 
+project(':controllers') {
+    dependencies {
+        compile project(':services')
+    }
+}
+
 project(':web') {
     apply plugin: 'jetty'  // jetty plugin extends war plugin, so we get all war plugin functionality as well.
     
     dependencies {
-        compile project(':services')  // Because configurations.compile.transitive = true we only have to specify services project, although we also reference dataaccess and domain projects.
+        compile project(':controllers')  // Because configurations.compile.transitive = true we only have to specify services project, although we also reference dataaccess and domain projects.
     }
     
     // Add extra code to initProject task.

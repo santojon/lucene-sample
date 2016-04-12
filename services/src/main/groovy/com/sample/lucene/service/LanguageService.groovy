@@ -9,4 +9,8 @@ class LanguageService {
     Language findGroovy() {
        dao.findAll().find { it.name == 'Groovy' }
     }
+    
+    List getAll() {
+        dao.findAll() as List
+    }
 }
