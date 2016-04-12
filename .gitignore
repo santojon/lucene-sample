@@ -42,5 +42,7 @@ hs_err_pid*
 # "temporary" build files
 /target
 */build
+
 # gradle
 .gradle
+*.bin
