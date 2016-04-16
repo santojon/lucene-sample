@@ -6,6 +6,11 @@ class IndexingController {
     def service = new IndexingService()
     
     List results() {
-        service.run()
+        service.createIndex()
+        return service.searchIndex('marvel')
+    }
+    
+    List getResultsFor(String term) {
+        return service.search(term)
     }
 }

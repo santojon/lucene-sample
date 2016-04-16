@@ -1,0 +1,8 @@
+.navbar .navbar-brand, .navbar-inverse > .container-fluid {
+    padding: 10px;
+    color: #ffffff;
+}
+
+.container-fluid {
+    padding: 50px;
+}

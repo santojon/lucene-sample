@@ -1,0 +1,4 @@
+var arr = [];
+[].slice.call(document.getElementsByTagName('a')).forEach(function(link) { arr.push(link['href']); });
+var tt = arr.filter(function(l) { return l.match(/google*/) === null; });
+console.log(tt);
