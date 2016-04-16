@@ -23,70 +23,90 @@ class IndexingService {
 
 	public static final String FIELD_PATH = 'path'
 	public static final String FIELD_CONTENTS = 'contents'
+	
+	public static final int MAX_PAGINATION = 10000
     
+    /*
+     * Create the indexes for searchs
+     */
     public static void createIndex() throws CorruptIndexException, LockObtainFailedException, IOException {
+    	Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_40)
         
         // Directory to put indexes
-		def inDir = new File(INDEX_DIRECTORY)
-		def indexDirectory = FSDirectory.open(inDir) ?: new RAMDirectory()
-		println 'dir --> ' indexDirectory
+		File inDir = new File(INDEX_DIRECTORY)
+		Directory indexDirectory = FSDirectory.open(inDir)
+		println 'dir --> ' + inDir.path
 		
 		// Set up directory to write
-		def analyzer = new StandardAnalyzer(Version.LUCENE_40)
-		def writerConfiguration = new IndexWriterConfig(Version.LUCENE_40, analyzer)
-        def indexWriter = new IndexWriter(indexDirectory, writerConfiguration)
+		IndexWriterConfig writerConfiguration = new IndexWriterConfig(Version.LUCENE_40, analyzer)
+        IndexWriter indexWriter = new IndexWriter(indexDirectory, writerConfiguration)
 		
 		// Set up the files directory
 		File dir = new File(FILES_TO_INDEX_DIRECTORY)
 		File[] files = dir.listFiles()
-		println 'folder (' + files.length + ') --> ' files
+		println 'folder (' + files.length + ') --> ' + dir.path
 		
 		// Create indexes for files
 		for (int i = 0; i < files.length; i++) {
+			
+			// try to create a new indexed document from file
 		    try {
     		    File file = files[i]
     			Document document = new Document()
     
+    			// file path
     			String path = file.getCanonicalPath()
     			document.add(new TextField(FIELD_PATH, path, Field.Store.YES))
     
+    			// file content
     			String reader = FileUtils.readFileToString(file)
     			document.add(new TextField(FIELD_CONTENTS, reader, Field.Store.YES))
-    			println 'file (' + (i + 1) + ') --> ' document."$FIELD_PATH"
+    			println 'file (' + (i + 1) + ') --> ' + document."$FIELD_PATH"
     
+    			// add it to index
     			indexWriter.addDocument(document)
 		    } catch (Exception e) {
+		    	// bypass errors
 		        i++
 		    }
 		}
 		
-		//indexWriter.optimize()
+		// close used resources
 		indexWriter.close()
+		indexDirectory.close()
 	}
 
+	/*
+     * Searches for values in documents content
+     */
 	public static List searchIndex(String searchString) throws IOException, ParseException {
 	    List result = []
-		println("Searching for '" + searchString + "'")
+		println 'Searching for --> \'' + searchString + '\''
 		
-		def directory = FSDirectory.open(INDEX_DIRECTORY)
-		def indexReader = IndexReader.open(directory)
-		def indexSearcher = new IndexSearcher(indexReader)
+		// Directory to read indexes
+		File inDir = new File(INDEX_DIRECTORY)
+		Directory directory = FSDirectory.open(inDir)
+		
+		// set up structures used to search indexes
+		IndexReader indexReader = DirectoryReader.open(directory)
+		IndexSearcher indexSearcher = new IndexSearcher(indexReader)
+		println 'dir --> ' + directory
 
+		// create query structure
 		def analyzer = new StandardAnalyzer(Version.LUCENE_40)
-		QueryParser queryParser = new QueryParser(FIELD_CONTENTS, analyzer)
-		Query query = queryParser.parse(searchString)
-		ScoreDoc hits = indexSearcher.search(query)
-		println("Number of hits: " + hits.length())
-
-		Iterator<ScoreDoc> it = hits.iterator()
-		while (it.hasNext()) {
-			ScoreDoc hit = it.next()
-			Document document = hit.getDocument()
-			String path = document.get(FIELD_PATH)
-			println("Hit: " + path)
+		def query = new StandardQueryParser(analyzer).parse("$FIELD_CONTENTS:$searchString", '')
+		
+		def hits =  indexSearcher.search(query, MAX_PAGINATION).scoreDocs
+		println 'Number of hits: ' + hits.length
+        
+        hits.collect{indexSearcher.doc(it.doc)}.each { document ->
+        	String path = document."$FIELD_PATH"
+			println 'Hit: ' + path
+			
 			result.add(document."$FIELD_CONTENTS")
-		}
-
+        }
+        
+		directory.close()
         return result
 	}
     
