@@ -46,3 +46,7 @@ hs_err_pid*
 # gradle
 .gradle
 *.bin
+
+# specific for project
+*/data
+*/index
