@@ -1,8 +1,9 @@
 package com.sample.lucene.service
 
-import java.io.*
-import java.util.*
+//import java.io.*
+//import java.util.*
 import org.apache.commons.io.*
+
 import org.apache.lucene.analysis.*
 import org.apache.lucene.analysis.standard.*
 import org.apache.lucene.document.*
@@ -24,18 +25,23 @@ class IndexingService {
 	public static final String FIELD_CONTENTS = 'contents'
     
     public static void createIndex() throws CorruptIndexException, LockObtainFailedException, IOException {
+        
+        // Directory to put indexes
 		def inDir = new File(INDEX_DIRECTORY)
-		def indexDirectory = FSDirectory.open(inDir)
+		def indexDirectory = FSDirectory.open(inDir) ?: new RAMDirectory()
 		println 'dir --> ' indexDirectory
 		
+		// Set up directory to write
 		def analyzer = new StandardAnalyzer(Version.LUCENE_40)
 		def writerConfiguration = new IndexWriterConfig(Version.LUCENE_40, analyzer)
         def indexWriter = new IndexWriter(indexDirectory, writerConfiguration)
 		
+		// Set up the files directory
 		File dir = new File(FILES_TO_INDEX_DIRECTORY)
 		File[] files = dir.listFiles()
-		println 'dir ' + files.length + ' --> ' files
+		println 'folder (' + files.length + ') --> ' files
 		
+		// Create indexes for files
 		for (int i = 0; i < files.length; i++) {
 		    try {
     		    File file = files[i]
@@ -46,7 +52,7 @@ class IndexingService {
     
     			String reader = FileUtils.readFileToString(file)
     			document.add(new TextField(FIELD_CONTENTS, reader, Field.Store.YES))
-    			println 'dir ' + (i + 1) + ' --> ' document."$FIELD_PATH"
+    			println 'file (' + (i + 1) + ') --> ' document."$FIELD_PATH"
     
     			indexWriter.addDocument(document)
 		    } catch (Exception e) {
