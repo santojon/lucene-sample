@@ -7,9 +7,13 @@ html.html {
         // Page title
         title "Results"
         
-        // CSS!String
-        link(rel: 'stylesheet', href: 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css')
+        // CSS
+        link(rel: 'stylesheet', href: '/assets/css/bootstrap.min.css')
+        link(rel: 'stylesheet', href: '/assets/css/bootstrap-theme.css')
         link(rel: 'stylesheet', href: '/assets/css/style.css')
+        
+        // JS
+        script(type: 'text/javascript', src: '/assets/js/bootstrap.min.js')
     }
     body {
       
@@ -18,9 +22,15 @@ html.html {
        */
        
       div(class: 'navbar navbar-inverse navbar-fixed-top') {
-          a(class: 'brand',
-            href: 'http://beta.groovy-lang.org/docs/groovy-2.3.2/html/documentation/markup-template-engine.html',
-              'Groovy - Template Engine docs')
+          a(class: 'navbar-brand',  href: '/', 'LS')
+          form(class: 'navbar-form navbar-left') {
+            div(class: 'form-group') {
+              input(type: 'text', class: 'form-control width300', placeholder: 'Search')
+              button(class: 'btn btn-default btn-big') {
+                span(class: 'glyphicon glyphicon-search')
+              }
+            }
+          }
       }
       
       /*
@@ -29,9 +39,12 @@ html.html {
       
       div(class: 'container-fluid') {
             h1 "Results"
-            
-            controller.results().each { String result ->
-                p result
+            ol {
+              controller.getResultsFor().each { String result ->
+                  li {
+                    a(href: result, result)
+                  }
+              }
             }
       }
       

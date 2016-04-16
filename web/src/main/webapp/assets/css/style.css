@@ -6,3 +6,11 @@
 .container-fluid {
     padding: 50px;
 }
+
+.width300 {
+    width: 300px !important;
+}
+
+.btn-big {
+    padding: 5px !important;
+}
