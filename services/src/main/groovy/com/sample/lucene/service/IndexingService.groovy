@@ -70,6 +70,9 @@ class IndexingService {
         
         // Directory to put indexes
 		File inDir = new File(INDEX_DIRECTORY)
+		
+		// ensure it's clean
+		FileUtils.cleanDirectory(inDir)
 		Directory indexDirectory = FSDirectory.open(inDir)
 		println 'dir --> ' + inDir.path
 		
@@ -119,6 +122,8 @@ class IndexingService {
      */
 	public List searchIndex(String searchString) throws IOException, ParseException {
 	    List result = []
+	    def repeated = [:]
+	    
 		println 'Searching for --> \'' + searchString + '\''
 		
 		// Directory to read indexes
@@ -149,12 +154,28 @@ class IndexingService {
 			String pos = anotherParts[anotherParts.size - 1]
 			
 			// Get real URL from position ID and put it into results
-			result.add(docDao.docUrls[Integer.parseInt(pos)])
+			String originalLink = docDao.docUrls[Integer.parseInt(pos)]
+			
+			if (originalLink in result) {
+				repeated[originalLink] ? repeated[originalLink]++ : (repeated[originalLink] = 2)
+			}
+			
+			result.add(originalLink)
+        }
+        
+        // Unify results
+        result = result.unique { a, b -> a <=> b }
+        
+        // Simple ranking by more repeated values
+        repeated.sort { -it.value }
+        repeated.each { key, val ->
+        	result.removeElement(key)
+        	result = [key] + result
         }
         
         // close resources and return
 		directory.close()
-        return result.unique { a, b -> a <=> b }
+        return result
 	}
 	
 	/**

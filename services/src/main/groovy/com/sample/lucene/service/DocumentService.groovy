@@ -75,7 +75,7 @@ class DocumentService {
     		}
     		println "'${strUrl}' successfully fetched!"
         }
-        googleIt()
+        //googleIt()
         return failures
     }
     
