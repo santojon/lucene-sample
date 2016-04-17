@@ -13,8 +13,13 @@ class IndexingController {
      * @param term: the term to search
      * @return: a list of results
      */
-    List getResultsFor(String term = 'marvel') {
-        service.isIndexed() ?: service.createIndex()
+    List getResultsFor(String term = 'marvel', boolean force = false) {
+        if (force) {
+            service.createIndex()
+        } else {
+            service.isIndexed() ?: service.createIndex()
+        }
+        
         return service.searchIndex(term ?: 'marvel')
     }
 }

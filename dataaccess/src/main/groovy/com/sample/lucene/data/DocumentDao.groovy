@@ -1,10 +1,15 @@
 package com.sample.lucene.data
 
-import org.apache.lucene.document.*
-
+/**
+ * Class responsible to provide document related data
+ */
 class DocumentDao {
     
-    List docUrls() {
+    /**
+     * All doc base URLs
+     * @return: a list of all docs URLs
+     */
+    public static List getDocUrls() {
         return [
             'https://www.youtube.com/?gl=BR',
             'http://mrjogos.uol.com.br/jogos-de-super-herois/',
@@ -187,21 +192,4 @@ class DocumentDao {
             'http://pt.wikipedia.org/wiki/Marvel_Super_Heroes_vs._Street_Fighte'
         ]
     }
-    
-    List findAll() {
-        //return [
-          //  new Document(name: 'Java'),
-        //    new Document(name: 'Groovy'),
-        //    new Language(name: 'Scala')
-       // ]
-    }
-    
-    
-    // Index the shakespeare text file line by line.
-       // new File("/home/ubuntu/workspace/Text.txt").readLines().eachWithIndex { line, lineNumber ->
-        //	Document doc = new Document();
-        //	doc.add(new IntField("lineNumber", lineNumber, Field.Store.YES))
-        //	doc.add(new TextField("line", line, Field.Store.YES))
-       // 	indexWriter.addDocument(doc)
-       // }
 }

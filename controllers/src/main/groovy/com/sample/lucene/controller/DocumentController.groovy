@@ -6,7 +6,6 @@ class DocumentController {
     def service = new DocumentService()
     
     String fetch() {
-        service.fetchDocs()
-        return 'Done!'
+        return service.fetchDocs()
     }
 }

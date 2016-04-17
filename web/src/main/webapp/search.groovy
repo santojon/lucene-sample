@@ -12,24 +12,13 @@ html.html {
         link(rel: 'stylesheet', href: '/assets/css/style.css')
     }
     body {
-      
-      /*
-       * NAVBAR!!!
-       */
-       
-      div(class: 'navbar navbar-inverse navbar-fixed-top') {
-          a(class: 'brand',
-            href: 'http://beta.groovy-lang.org/docs/groovy-2.3.2/html/documentation/markup-template-engine.html',
-              'Groovy - Template Engine docs')
-      }
-      
-      /*
+            /*
        * This part is the main page
        */
       
       div(class: 'container-fluid') {
             h1 "Results"
-            controller.search('war').each { String result ->
+            controller.getResultsFor('war', true).each { String result ->
                 p result
             }
       }

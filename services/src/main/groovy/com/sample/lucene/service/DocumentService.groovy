@@ -15,19 +15,26 @@ import groovy.json.JsonSlurper
 
 import com.sample.lucene.data.DocumentDao
 
+/**
+ * Service responsible to handle document related things
+ * This service uses to refresh doc base
+ */
 class DocumentService {
+    // related data access object
     def dao = new DocumentDao()
     
-    void fetchDocs() {
-        dao.docUrls().each { String strUrl ->
+    /**
+     * Renew document base with last version of docs from web
+     * @return: the list of failures
+     */
+    public List fetchDocs() {
+        List failures = []
+        
+        // for all registered sites, do
+        dao.docUrls.eachWithIndex { String strUrl, int i ->
+        
             URL url
-
     		try {
-                def http = new HTTPBuilder(strUrl)
-                def html = http.get([:])
-                
-                //println html.toString()
-                
     			// get URL content
     			url = new URL(strUrl)
     			URLConnection conn = url.openConnection()
@@ -36,17 +43,16 @@ class DocumentService {
     			BufferedReader br = new BufferedReader(
                                    new InputStreamReader(conn.getInputStream()))
     
-    			String inputLine
-    
-    			//save to this filename
-    			String fileName = "/home/ubuntu/workspace/data/${strUrl.hashCode()}.html"
+    			// save to this filename
+    			String fileName = "/home/ubuntu/workspace/data/${strUrl.hashCode()}-doc${i}.html"
     			File file = new File(fileName)
     
     			if (!file.exists()) {
     				file.createNewFile()
     			}
     
-    			//use FileWriter to write file
+    			// use FileWriter to write file
+    			String inputLine
     			FileWriter fw = new FileWriter(file.getAbsoluteFile())
     			BufferedWriter bw = new BufferedWriter(fw)
     
@@ -54,31 +60,44 @@ class DocumentService {
     				bw.write(inputLine)
     			}
     
+                // free the resources
     			bw.close()
     			br.close()
     
-    			println "'${strUrl}' successfully fetched!"
-    
     		} catch (MalformedURLException e) {
     			e.printStackTrace()
+    			failures.add(strUrl)
     		} catch (IOException e) {
-    			e.printStackTrace()
+    		    if (!e.message.contains('403')) {
+    		        e.printStackTrace()
+    		    }
+    		    failures.add(strUrl)
     		}
+    		println "'${strUrl}' successfully fetched!"
         }
-        //googleIt()
+        googleIt()
+        return failures
     }
     
-    void googleIt() {
+    /**
+     * Search for a theme in google
+     */
+    void googleIt(String query = 'marvel') {
+        
+        // create resources
         def http = new HTTPBuilder()
         def json =  new JsonSlurper()
 
-        for (int pageNum = 0; pageNum < 18; pageNum = pageNum + 8) {
+        // to get some pages
+        for (int pageNum = 0; pageNum < 250; pageNum = pageNum + 8) {
+            // make the request
             http.request( 'http://ajax.googleapis.com', Method.GET, ContentType.TEXT ) { req ->
               uri.path = '/ajax/services/search/web'
-              uri.query = [ v:'1.0', q: 'test', rsz: 'large', start: "$pageNum" ]
+              uri.query = [ v:'1.0', q: query, rsz: 'large', start: "$pageNum" ]
               headers.'User-Agent' = "Mozilla/5.0 Firefox/3.0.4"
               headers.Accept = 'application/json'
             
+              // consume succes response
               response.success = { resp, reader ->
                 assert resp.statusLine.statusCode == 200
                 println "Got response: ${resp.statusLine}"
@@ -89,11 +108,18 @@ class DocumentService {
                 }
               }
             
+              // Not Found :(
               response.'404' = {
                 println 'Not found'
               }
+              
+              // Denied :(
+              response.'403' = {
+                println 'Denied'
+              }
             }
             
+            // WA
             if (pageNum == 0) {
                 pageNum = 1
             }

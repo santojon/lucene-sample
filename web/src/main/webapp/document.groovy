@@ -4,10 +4,12 @@ def controller = new DocumentController()
 
 html.html {
     head {
-        title "Simple page"
+        title "Documents renoval"
     }
     body {
-        h1 "Simple page"
-        p controller.fetch()
+        h4 "Fetching documents from web to server..."
+        controller.fetch().each { String failure ->
+            p "Document from '$failure' fails to fetch.. :("
+        }
     }
 }

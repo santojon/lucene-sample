@@ -16,10 +16,13 @@ import org.apache.lucene.store.*
 import org.apache.lucene.search.*
 import org.apache.lucene.util.*
 
+import com.sample.lucene.data.DocumentDao
+
 /**
  * Service responsible to handle searchs and indexing documents
  */
 class IndexingService {
+	def docDao = new DocumentDao()
 	
     // Directories used to get indexes/set indexes
     public static final String FILES_TO_INDEX_DIRECTORY = '../data'
@@ -30,7 +33,7 @@ class IndexingService {
 	public static final String FIELD_CONTENTS = 'contents'
 	
 	// Pagination value
-	public static final int MAX_PAGINATION = 10000
+	public static final int MAX = 10000
 	
 	// Stopwords
 	public static final CharArraySet ENGLISH_STOP_WORDS =
@@ -114,7 +117,7 @@ class IndexingService {
      * @param searchString: The searching value
      * @return: A list of results
      */
-	public static List searchIndex(String searchString) throws IOException, ParseException {
+	public List searchIndex(String searchString) throws IOException, ParseException {
 	    List result = []
 		println 'Searching for --> \'' + searchString + '\''
 		
@@ -132,7 +135,7 @@ class IndexingService {
 		Query query = new StandardQueryParser(analyzer).parse("$FIELD_CONTENTS:$searchString", '')
 		
 		// Search
-		List hits =  indexSearcher.search(query, MAX_PAGINATION).scoreDocs
+		List hits =  indexSearcher.search(query, MAX).scoreDocs
 		println 'Number of hits --> ' + hits.size
         
         // Collect data from results
@@ -140,12 +143,18 @@ class IndexingService {
         	String path = document."$FIELD_PATH"
 			println 'Hit --> ' + path
 			
-			result.add(document."$FIELD_PATH")
+			// parse path to retrieve real URL
+			List parts = path.split('-doc')
+			List anotherParts = parts[parts.size - 1].split('.html')
+			String pos = anotherParts[anotherParts.size - 1]
+			
+			// Get real URL from position ID and put it into results
+			result.add(docDao.docUrls[Integer.parseInt(pos)])
         }
         
         // close resources and return
 		directory.close()
-        return result
+        return result.unique { a, b -> a <=> b }
 	}
 	
 	/**
@@ -156,44 +165,4 @@ class IndexingService {
 		File inDir = new File(INDEX_DIRECTORY)
 		return (inDir?.isDirectory() && (inDir?.list()?.length > 0))
 	}
-    
-    List index() {
-        List result = []
-        // This script indexes the text from shakespeare.txt and indexes each line. 
-        // It then search this index for a value passed in as an argument.
-        
-        // Search for a line containing the first past argument if passed, 
-        // otherwise search for lines with monkey. 
-        def searchTerm = "line:monkey"
-        
-        // Setup required lucene objects for writing to the lucene index. 
-        def indexDirectory = new RAMDirectory()
-        def analyzer = new StandardAnalyzer(Version.LUCENE_40)
-        def writerConfiguration = new IndexWriterConfig(Version.LUCENE_40, analyzer)
-        def indexWriter = new IndexWriter(indexDirectory, writerConfiguration)
-    
-        // Index the shakespeare text file line by line.
-        new File("/home/ubuntu/workspace/Text.txt").readLines().eachWithIndex { line, lineNumber ->
-        	Document doc = new Document()
-        	doc.add(new IntField("lineNumber", lineNumber, Field.Store.YES))
-        	doc.add(new TextField("line", line, Field.Store.YES))
-        	indexWriter.addDocument(doc)
-        }
-        
-        // Print out each line which matches the search term, with a return limit of 10000 matches.
-        def indexReader = indexWriter.getReader()
-        def query = new StandardQueryParser(analyzer).parse(searchTerm, "")
-        def indexSearcher = new IndexSearcher(indexReader)
-        def hits =  indexSearcher.search(query, 10000).scoreDocs
-        
-        hits.collect{indexSearcher.doc(it.doc)}.each {
-            result.add("${it.lineNumber} ${it.line}")
-        }
-        
-        println "${hits.length} matches for ${searchTerm - 'line:'} found."
-        
-        // Tidy up resources
-        indexReader.close()
-        indexWriter.close()
-    }
 }
