@@ -36,7 +36,7 @@ class IndexingService {
 	public static final int MAX = 10000
 	
 	// Stopwords
-	public static final CharArraySet ENGLISH_STOP_WORDS =
+	public static final CharArraySet STOP_WORDS =
 		new CharArraySet(Version.LUCENE_40, [
 		    'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an',
 		    'and', 'any', 'are', 'aren\'t', 'as', 'at', 'be', 'because', 'been',
@@ -59,14 +59,32 @@ class IndexingService {
 		    'what', 'what\'s', 'when', 'when\'s', 'where', 'where\'s', 'which',
 		    'while', 'who', 'who\'s', 'whom', 'why', 'why\'s', 'with', 'won\'t',
 		    'would', 'wouldn\'t', 'you', 'you\'d', 'you\'ll', 'you\'re', 'you\'ve',
-		    'your', 'yours', 'yourself', 'yourselves'
+		    'your', 'yours', 'yourself', 'yourselves', 'último', 'é', 'acerca',
+		    'agora', 'algumas', 'alguns', 'ali', 'ambos', 'antes', 'apontar',
+		    'aquela', 'aquelas', 'aquele', 'aqueles', 'aqui', 'atrás', 'bem', 'bom',
+		    'cada', 'caminho', 'cima', 'com', 'como', 'comprido', 'conhecido',
+		    'corrente', 'das', 'debaixo', 'dentro', 'desde', 'desligado', 'deve',
+		    'devem', 'deverá', 'direita', 'diz', 'dizer', 'dois', 'dos', 'e', 'ela',
+		    'ele', 'eles', 'em', 'enquanto', 'então', 'está', 'estão', 'estado',
+		    'estar', 'estará', 'este', 'estes', 'esteve', 'estive', 'estivemos',
+		    'estiveram', 'eu', 'fará', 'faz', 'fazer', 'fazia', 'fez', 'fim', 'foi',
+		    'fora', 'horas', 'iniciar', 'inicio', 'ir', 'irá', 'ista', 'iste', 'isto',
+		    'ligado', 'maioria', 'maiorias', 'mais', 'mas', 'mesmo', 'meu', 'muito',
+		    'muitos', 'nós', 'não', 'nome', 'nosso', 'novo', 'o', 'onde', 'os', 'ou',
+		    'outro', 'para', 'parte', 'pegar', 'pelo', 'pessoas', 'pode', 'poderá',
+		    'podia', 'por', 'porque', 'povo', 'promeiro', 'quê', 'qual', 'qualquer',
+		    'quando', 'quem', 'quieto', 'são', 'saber', 'sem', 'ser', 'seu', 'somente',
+		    'têm', 'tal', 'também', 'tem', 'tempo', 'tenho', 'tentar', 'tentaram',
+		    'tente', 'tentei', 'teu', 'teve', 'tipo', 'tive', 'todos', 'trabalhar',
+		    'trabalho', 'tu', 'um', 'uma', 'umas', 'uns', 'usa', 'usar', 'valor',
+		    'veja', 'ver', 'verdade', 'verdadeiro', 'você'
 		], true)
     
     /**
      * Create the indexes for searchs
      */
     public static void createIndex() throws CorruptIndexException, LockObtainFailedException, IOException {
-    	Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_40, ENGLISH_STOP_WORDS)
+    	Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_40, STOP_WORDS)
         
         // Directory to put indexes
 		File inDir = new File(INDEX_DIRECTORY)
@@ -136,7 +154,7 @@ class IndexingService {
 		println 'dir --> ' + inDir.path
 
 		// create query structure
-		Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_40, ENGLISH_STOP_WORDS)
+		Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_40, STOP_WORDS)
 		Query query = new StandardQueryParser(analyzer).parse("$FIELD_CONTENTS:$searchString", '')
 		
 		// Search

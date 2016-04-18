@@ -38,25 +38,8 @@ subprojects {
         compile 'org.apache.lucene:lucene-analyzers-common:4.0.0'
         compile 'org.apache.lucene:lucene-queries:4.0.0'
         
-        // undertow JAX-RS support
-        compile 'org.jboss.resteasy:resteasy-jaxrs:3.0.14.Final'
-        compile 'org.jboss.resteasy:resteasy-servlet-initializer:3.0.14.Final'
-        //compile 'org.jboss.resteasy:resteasy-undertow:3.0.14.Final'
-    
-        // RESTeasy Jackson provider
-        compile 'org.jboss.resteasy:resteasy-jackson-provider:3.0.14.Final'
-        
-        // RESTeasy CDI injector classes
-        compile 'org.jboss.resteasy:resteasy-cdi:3.0.14.Final'
-        compile 'org.jboss.resteasy:resteasy-servlet-initializer:3.0.14.Final'
-       
-        // Java EE classes
-        compile 'javax.enterprise:cdi-api:1.2'
-        compile 'javax:javaee-api:7.0'
-    
-        // JBOSS Weld impl
-        compile 'org.jboss.weld:weld-core:2.3.2.Final'
-        compile group: 'org.jboss.weld.servlet', name: 'weld-servlet-core', version: '2.3.2.Final'
+        // To use fileUtils
+        compile 'commons-io:commons-io:2.4'
     
         // We use the awesome Spock testing and specification framework
         //testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
