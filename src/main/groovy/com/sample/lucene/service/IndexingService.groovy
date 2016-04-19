@@ -5,6 +5,9 @@ package com.sample.lucene.service
 import org.apache.commons.io.*
 
 import org.apache.lucene.analysis.*
+import org.apache.lucene.analysis.en.*
+import org.apache.lucene.analysis.core.*
+import org.apache.lucene.analysis.tokenattributes.*
 import org.apache.lucene.analysis.util.*
 import org.apache.lucene.analysis.standard.*
 import org.apache.lucene.document.*
@@ -24,9 +27,11 @@ import com.sample.lucene.dao.DocumentDao
 class IndexingService {
 	def docDao = new DocumentDao()
 	
+	List<List<Integer>> matrix = [[]]
+	
     // Directories used to get indexes/set indexes
     public static final String FILES_TO_INDEX_DIRECTORY = '/home/ubuntu/workspace/data'
-	public static final String INDEX_DIRECTORY = '/home/ubuntu/workspace/index'
+	public static final String INDEX_DIRECTORY = '/home/ubuntu/workspace/index/base'
 
 	// Index parameters
 	public static final String FIELD_PATH = 'path'
@@ -35,9 +40,8 @@ class IndexingService {
 	// Pagination value
 	public static final int MAX = 10000
 	
-	// Stopwords
-	public static final CharArraySet STOP_WORDS =
-		new CharArraySet(Version.LUCENE_40, [
+	// Words used to Stemming and Stopwords
+	public static final List WORDS = [
 		    'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an',
 		    'and', 'any', 'are', 'aren\'t', 'as', 'at', 'be', 'because', 'been',
 		    'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can\'t',
@@ -78,16 +82,35 @@ class IndexingService {
 		    'tente', 'tentei', 'teu', 'teve', 'tipo', 'tive', 'todos', 'trabalhar',
 		    'trabalho', 'tu', 'um', 'uma', 'umas', 'uns', 'usa', 'usar', 'valor',
 		    'veja', 'ver', 'verdade', 'verdadeiro', 'você'
-		], true)
+		]
+	
+	// Stopwords
+	public static final CharArraySet STOP_WORDS =
+		new CharArraySet(Version.LUCENE_40, WORDS, true)
     
     /**
      * Create the indexes for searchs
      */
-    public static void createIndex() throws CorruptIndexException, LockObtainFailedException, IOException {
-    	Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_40, STOP_WORDS)
+    public static void createIndex(boolean stop = true, boolean stem = true)
+    		throws CorruptIndexException, LockObtainFailedException, IOException {
+    	
+    	Analyzer analyzer = stop ?
+    			new StandardAnalyzer(Version.LUCENE_40, STOP_WORDS) :
+    			new StandardAnalyzer(Version.LUCENE_40)
         
         // Directory to put indexes
-		File inDir = new File(INDEX_DIRECTORY)
+		File inDir
+		if (stop) {
+			if (stem) {
+				inDir = new File(INDEX_DIRECTORY + '4')
+			} else {
+				inDir = new File(INDEX_DIRECTORY + '2')
+			}
+		} else if (stem) {
+			inDir = new File(INDEX_DIRECTORY + '3')
+		} else {
+			inDir = new File(INDEX_DIRECTORY + '1')
+		}
 		
 		// ensure it's clean
 		FileUtils.cleanDirectory(inDir)
@@ -117,6 +140,35 @@ class IndexingService {
     
     			// file content
     			String reader = FileUtils.readFileToString(file)
+    			
+    			if (stem) {
+		    		TokenStream tokenStream = new StandardTokenizer(
+		    			Version.LUCENE_40, new StringReader(reader)
+		    		)
+			        
+			        if (stop) {
+			        	tokenStream = new StopFilter(Version.LUCENE_40, tokenStream, STOP_WORDS)
+			        }
+			        tokenStream = new PorterStemFilter(tokenStream)
+			 
+			        StringBuilder sb = new StringBuilder()
+			        
+			        OffsetAttribute offsetAttribute = tokenStream.addAttribute(OffsetAttribute.class)
+			        CharTermAttribute charTermAttr = tokenStream.getAttribute(CharTermAttribute.class)
+			        try{
+			            while (tokenStream.incrementToken()) {
+			                if (sb.length() > 0) {
+			                    sb.append(" ")
+			                }
+			                sb.append(charTermAttr.toString())
+			            }
+			        }
+			        catch (IOException e){
+			            println(e.message)
+			        }
+			        reader = sb.toString()
+    			}
+    			
     			document.add(new TextField(FIELD_CONTENTS, reader, Field.Store.YES))
     			println 'file (' + (i + 1) + ') --> ' + document."$FIELD_PATH"
     
@@ -138,13 +190,28 @@ class IndexingService {
      * @param searchString: The searching value
      * @return: A list of results
      */
-	public List searchIndex(String searchString) throws IOException, ParseException {
+	public List searchIndex(
+			String searchString,
+			boolean stop = true,
+			boolean stem = true) throws IOException, ParseException {
+				
 	    List result = []
 	    
 		println 'Searching for --> \'' + searchString + '\''
 		
 		// Directory to read indexes
-		File inDir = new File(INDEX_DIRECTORY)
+		File inDir
+		if (stop) {
+			if (stem) {
+				inDir = new File(INDEX_DIRECTORY + '4')
+			} else {
+				inDir = new File(INDEX_DIRECTORY + '2')
+			}
+		} else if (stem) {
+			inDir = new File(INDEX_DIRECTORY + '3')
+		} else {
+			inDir = new File(INDEX_DIRECTORY + '1')
+		}
 		Directory directory = FSDirectory.open(inDir)
 		
 		// set up structures used to search indexes
@@ -153,16 +220,20 @@ class IndexingService {
 		println 'dir --> ' + inDir.path
 
 		// create query structure
-		Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_40, STOP_WORDS)
+		Analyzer analyzer = stop ?
+    			new StandardAnalyzer(Version.LUCENE_40, STOP_WORDS) :
+    			new StandardAnalyzer(Version.LUCENE_40)
 		Query query = new StandardQueryParser(analyzer).parse("$FIELD_CONTENTS:$searchString", '')
 		
 		// Search
 		List hits =  indexSearcher.search(query, MAX).scoreDocs
 		println 'Number of hits --> ' + hits.size
         
-        hits.each { document ->
-        	println ' Score --> ' + document.score
-        }
+        //hits.each { document ->
+        //	println ' Score --> ' + document.score
+        //}
+        
+        List hitsIds = []
         
         // Collect data from results
         hits.collect{indexSearcher.doc(it.doc)}.each { document ->
@@ -174,10 +245,18 @@ class IndexingService {
 			List anotherParts = parts[parts.size - 1].split('.html')
 			String pos = anotherParts[anotherParts.size - 1]
 			
+			hitsIds.add(Integer.parseInt(pos))
 			// Get real URL from position ID and put it into results
 			String originalLink = docDao.docUrls[Integer.parseInt(pos)]
 			result.add(originalLink)
         }
+        
+        List failures = docDao.indexList - hitsIds
+        println 'Hits --> ' + hitsIds
+        println 'Misses --> ' + failures
+        
+        
+        //initMatrix(3, docDao.indexList.size)
         
         // close resources and return
 		directory.close()
@@ -188,8 +267,16 @@ class IndexingService {
 	 * Verifies if the files are indexed
 	 * @return: true if indexed, false, otherwise
 	 */
-	public static boolean isIndexed() {
-		File inDir = new File(INDEX_DIRECTORY)
+	public static boolean isIndexed(int baseNum = 4) {
+		File inDir = new File(INDEX_DIRECTORY + "$baseNum")
 		return (inDir?.isDirectory() && (inDir?.list()?.length > 0))
 	}
+	
+	//void initMatrix(int queriesNumber, int docBaseSize) {
+	//	for () {
+	//		for () {
+	//			matrix[i][j] = 0
+	//		}
+	//	}
+	//}
 }

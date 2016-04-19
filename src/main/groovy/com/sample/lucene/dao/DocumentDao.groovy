@@ -298,4 +298,17 @@ class DocumentDao {
             'http://jovem.ig.com.br/cultura/livros/2014-07-10/s…s-em-novas-capas-dos-quadrinhos-da-dc-comics.html'
         ]
     }
+    
+    /**
+     * Method responsible to return a list of integer in urls list size
+     * @return: a list of ints
+     */
+    List getIndexList() {
+        List result = []
+        
+        docUrls.eachWithIndex { doc, ind ->
+            result.add(ind)
+        }
+        return result
+    }
 }
