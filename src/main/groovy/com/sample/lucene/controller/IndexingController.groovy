@@ -1,10 +1,11 @@
 package com.sample.lucene.controller
 
 import org.springframework.stereotype.Controller
-import org.springframework.ui.Model
+import org.springframework.ui.*
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 
+import com.sample.lucene.domain.*
 import com.sample.lucene.service.IndexingService
 /**
  * Controller Responsible for indexing and searching
@@ -40,9 +41,25 @@ class IndexingController {
         }
         
         List result = service.searchIndex(term ?: 'marvel')
+        model.addAttribute("searchData", new SearchData(term: term, results: result))
+        return "indexing"
+    }
+    
+    /**
+     * Return search results for queries from UI
+     * @param term: the term to search
+     * @return: a list of results
+     */
+    @RequestMapping("/search")
+    String search (SearchData model) {
         
-        model.addAttribute("term", term)
-        model.addAttribute("result", result)
+        if (model.force) {
+            service.createIndex()
+        } else {
+            service.isIndexed() ?: service.createIndex()
+        }
+        model.results = service.searchIndex(model.term ?: 'marvel')
+        
         return "indexing"
     }
 }
