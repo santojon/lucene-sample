@@ -81,7 +81,7 @@ class IndexingService {
 		    'têm', 'tal', 'também', 'tem', 'tempo', 'tenho', 'tentar', 'tentaram',
 		    'tente', 'tentei', 'teu', 'teve', 'tipo', 'tive', 'todos', 'trabalhar',
 		    'trabalho', 'tu', 'um', 'uma', 'umas', 'uns', 'usa', 'usar', 'valor',
-		    'veja', 'ver', 'verdade', 'verdadeiro', 'você'
+		    'veja', 'ver', 'verdade', 'verdadeiro', 'você','de','a','o','que','do','da'
 		]
 	
 	// Stopwords
@@ -254,6 +254,11 @@ class IndexingService {
         List failures = docDao.indexList - hitsIds
         println 'Hits --> ' + hitsIds
         println 'Misses --> ' + failures
+        
+        failures.each { failure ->
+        	println 'Miss --> ' + docDao.docUrls[failure]
+        	result.add(docDao.docUrls[failure])
+        }
         
         
         //initMatrix(3, docDao.indexList.size)

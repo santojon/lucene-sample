@@ -51,14 +51,29 @@ class IndexingController {
      * @return: a list of results
      */
     @RequestMapping("/search")
-    String search (SearchData model) {
+    String search (SearchData model,
+        @RequestParam(
+            value="base",
+            required=false,
+            defaultValue="4"
+        ) String base,
+        @RequestParam(
+            value="stop",
+            required=false,
+            defaultValue="true"
+        ) String stop,
+        @RequestParam(
+            value="stem",
+            required=false,
+            defaultValue="true"
+        ) String stem) {
         
         if (model.force) {
             service.createIndex()
         } else {
-            service.isIndexed() ?: service.createIndex()
+            service.isIndexed(Integer.parseInt(base)) ?: service.createIndex()
         }
-        model.results = service.searchIndex(model.term ?: 'marvel')
+        model.results = service.searchIndex(model.term ?: 'marvel', Boolean.parseBoolean(stop), Boolean.parseBoolean(stem))
         
         return "indexing"
     }
